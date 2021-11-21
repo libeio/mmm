@@ -75,7 +75,7 @@ int main()
 
     // MGraph
     {
-        MGraph<Vertex<int>, Arc<double>> m;
+        MGraph<Vertex<int>, Arc<double>> m(UG);
     }
 
     return 0;

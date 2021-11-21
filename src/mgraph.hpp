@@ -28,7 +28,7 @@ public:
     return_type O() const { return _o; }
     void O(T o) { _o = o; };
 
-    Vertex(T o) : _o(o) {}
+    Vertex(const T& o) : _o(o) {}
     ~Vertex() {}
 };
 
@@ -54,7 +54,8 @@ public:
     return_type O() const { return _o; }
     void O(T o) { _o = o; };
 
-    Arc(T o) : _o(o), _w(INFINITY_MAX) {}
+    Arc(const T& o) : _o(o), _w(INFINITY_MAX) {}
+    Arc() : _w(INFINITY_MAX) {}
     ~Arc() {}
 };
 
@@ -67,12 +68,27 @@ protected:
     size_t _arcnum;
     GraphKind _kind;
 public:
-    void create(GraphKind kind);
+    MGraph(GraphKind kind);
+    ~MGraph();
 };
 
 template<typename V, typename A>
-void
-MGraph<V,A>::create(GraphKind kind)
+MGraph<V,A>::MGraph(GraphKind kind)
 {
+    const size_t sz = 256;
+
+    _vex.reserve(256);
+    _arc.resize(256);
+    for (size_t i = 0; i < _arc.size(); i++) {
+        _arc[i].resize(_arc.size());
+    }
+
+    _arcnum = 0;
     _kind = kind;
+}
+
+template<typename V, typename A>
+MGraph<V,A>::~MGraph()
+{
+
 }

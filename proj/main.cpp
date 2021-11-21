@@ -3,8 +3,7 @@
 
 int main()
 {
-    MGraph<Vertex<int>, Arc<double>> mg;
-    mg.create(UG);
+    MGraph<Vertex<int>, Arc<double>> mg(UG);
 
     return 0;
 }

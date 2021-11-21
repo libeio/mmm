@@ -1,7 +1,8 @@
 #pragma once
 
 // #define INFINITY_MAX   1.7976931348623157e+308
-#define INFINITY_MAX   140595803510648
+// #define INFINITY_MAX   140595803510648
+#define INFINITY_MAX   2147483647
 #define INFINITY_MIN   5e-324
 
 typedef enum {
