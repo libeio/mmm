@@ -245,26 +245,15 @@ MGraph<V, A>::display()
     printf("%16s", "");
     size_t i, j;
     for (i = 0; i < _vex.size(); i++) {
-        // printf("%16s", _vex[i].);
+        printf("%16d", i);
+    }
+    printf("\n");
+
+    for (i = 0; i < _arc.size(); i++) {
+        printf("%16d", i);
+        for (j = 0; j < _arc[i].size(); j++) {
+            printf("%16d", _arc[i][j]._w);
+        }
+        printf("\n");
     }
 }
-
-// void DisplayGraph(MGraph G)
-// {
-//     size_t i, j;
-    
-//     printf("图具有 %lu 个顶点, %lu 条弧\n", G.vex.size(), G.arcnum);
-//     printf("%8s", "");
-//     for (i = 0; i < G.vex.size(); i++) {    /** 输出图的顶点 */
-//         printf("%8s", G.vex[i].name.c_str());
-//     }
-//     printf("\n");
-    
-//     for (i = 0; i < G.arc.size(); i++) {
-//         printf("%8s", G.vex[i].name.c_str());
-//         for (j = 0; j < G.arc[i].size(); j++) {
-//             printf("%8d", G.arc[i][j].adj);
-//         }
-//         printf("\n");
-//     }
-// }
