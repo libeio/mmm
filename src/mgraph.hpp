@@ -205,19 +205,18 @@ template<typename V, typename A>
 void
 MGraph<V, A>::delete_vertex(V v)
 {
-    int index = locate_vertex(v);
-    if (index == -1) {
+    int x = locate_vertex(v);
+    if (x == -1) {
         return ;
     }
 
-    _vex[index].~V();
-    _vex[index] = V();
+    _vex[x].~V();
 
     int size = (int)_vex.size();
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             if (_mask & DG) {
-                if (i == index || j == index) {
+                if (i == x || j == x) {
                     if (_arc[i][j]._w == 1) {
                         _arc[i][j].~A();
                         _arc[i][j] = A(0);
@@ -225,7 +224,7 @@ MGraph<V, A>::delete_vertex(V v)
                     }
                 }
             } else if (_mask & DN) {
-                if (i == index || j == index) {
+                if (i == x || j == x) {
                     if (_arc[i][j]._w != INFINITY_MAX) {
                         _arc[i][j].~A();
                         _arc[i][j] = A(INFINITY_MAX);
@@ -233,7 +232,7 @@ MGraph<V, A>::delete_vertex(V v)
                     }
                 }
             } else if (_mask & UG) {
-                if ((i == index || j == index) && i > j) {
+                if ((i == x || j == x) && i > j) {
                     if (_arc[i][j]._w == 1) {
                         _arc[i][j].~A();
                         _arc[i][j] = A(0);
@@ -243,7 +242,7 @@ MGraph<V, A>::delete_vertex(V v)
                     }
                 }
             } else if (_mask & UN) {
-                if ((i == index || j == index) && i > j) {
+                if ((i == x || j == x) && i > j) {
                     if (_arc[i][j]._w != INFINITY_MAX) {
                         _arc[i][j].~A();
                         _arc[i][j] = A(INFINITY_MAX);
@@ -256,7 +255,29 @@ MGraph<V, A>::delete_vertex(V v)
         }
     }
 
-    _vexnum--;
+    int len = (int)_vex.size();
+    int k = len - 1;
+    for (int i = 0; i < len; i++) {
+        _arc[i][x] = _arc[i][k];
+        if (_mask & DG || _mask & UG) {
+            _arc[i][k] = A();
+        } else if (_mask & DN || _mask & UN) {
+            _arc[i][k] = A(INFINITY_MAX);
+        }
+    }
+
+    for (int j = 0; j < len; j++) {
+        _arc[x][j] = _arc[k][j];
+        if (_mask & DG || _mask & UG) {
+            _arc[k][j] = A();
+        } else if (_mask & DN || _mask & UN) {
+            _arc[k][j] = A(INFINITY_MAX);
+        }
+    } 
+
+    _vex[x] = _vex[k];
+    
+    _vex.resize(--_vexnum);
 
     return ;
 }

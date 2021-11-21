@@ -12,7 +12,7 @@ int main()
     std::vector<std::string> vvs = { "A", "B", "C", "D" };
     std::vector<PSS> vas = { PSS("A", "B"), PSS("A", "C"), PSS("A", "D"), PSS("C", "A"), PSS("C", "B"), PSS("D", "A") };
 
-    MGraph<Vertex<VNode>, Arc<ANode>> mg(UN);
+    MGraph<Vertex<VNode>, Arc<ANode>> mg(DG);
 
     for (auto & e : vvs) {
         mg.insert_vertex(Vertex<VNode>(VNode(e)));
