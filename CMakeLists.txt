@@ -5,7 +5,7 @@ project("mmm" CXX)
 #
 # Options
 #
-option(BUILD_PROJ   "build project program"     OFF)
+option(BUILD_PROJ   "build project program"     ON)
 option(BUILD_TEST   "build tests"               ON)
 
 #
@@ -23,6 +23,9 @@ include_directories(SYSTEM ${rapidjson_INCLUDE})
 
 find_package(xpack REQUIRED)
 include_directories(SYSTEM ${xpack_INCLUDE})
+
+find_package(spdlog REQUIRED)
+include_directories(SYSTEM ${spdlog_INCLUDE})
 
 #
 # Sources
