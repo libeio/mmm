@@ -6,8 +6,11 @@
 #define INFINITY_MIN   5e-324
 
 typedef enum {
-    DG,     // 有向图
-    DN,     // 有向网
-    UG,     // 无向图
-    UN      // 无向网
+    NO     = 0 << 0,
+    DG     = 1 << 0,
+    DN     = 1 << 1,
+    UG     = 1 << 2,
+    UN     = 1 << 3,
+    DENSE  = 1 << 4,
+    SPARSE = 1 << 5
 } GraphKind;

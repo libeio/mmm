@@ -16,11 +16,11 @@ int main()
     {
         Vertex<int> vi(9);
 
-        int x = vi.O();
+        int x = vi.get();
         std::cout << "before: x=" << x << std::endl;
 
-        vi.O(900);
-        x = vi.O();
+        vi.set(900);
+        x = vi.get();
         std::cout << "after: x=" << x << std::endl;
     }
     // pod 指针类型测试
@@ -28,12 +28,12 @@ int main()
         int i = 9;
         Vertex<int*> vi(&i);
 
-        int * x = vi.O();
+        int * x = vi.get();
         std::cout << "before: *x=" << *x << std::endl;
 
         int j = 900;
-        vi.O(&j);
-        x = vi.O();
+        vi.set(&j);
+        x = vi.get();
         std::cout << "after: *x=" << *x << std::endl;
     }
 
@@ -43,15 +43,14 @@ int main()
 
         Vertex<MyStruct> vst(st);
 
-        auto x = vst.O();
+        auto x = vst.get();
         std::cout << "before: MyStruct.i=" << x.i << std::endl;
 
         x.i = 100;
         std::cout << "modify: MyStruct.i=" << x.i << std::endl;
 
-        MyStruct _st(999);
-        vst.O(_st);
-        x = vst.O();
+        vst.set(MyStruct(999));
+        x = vst.get();
         std::cout << "after: MyStruct.i=" << x.i << std::endl;
     }
 
@@ -61,21 +60,16 @@ int main()
 
         Vertex<MyStruct*> vst(&st);
 
-        auto x = vst.O();
+        auto x = vst.get();
         std::cout << "before: MyStruct.i=" << x->i << std::endl;
 
         x->i = 200;
         std::cout << "modify: MyStruct.i=" << x->i << std::endl;
 
         MyStruct _st(777);
-        vst.O(&_st);
-        x = vst.O();
+        vst.set(&_st);
+        x = vst.get();
         std::cout << "after: MyStruct.i=" << x->i << std::endl;
-    }
-
-    // MGraph
-    {
-        MGraph<Vertex<int>, Arc<double>> m(UG);
     }
 
     return 0;
