@@ -56,8 +56,8 @@ public:
     using size_type       = size_t;
     using return_type     = typename std::remove_const<T>::type;
 protected:
-    uint32_t _w;
     T        _o;
+    uint32_t _w;
 public:
     // avoid to use it
     uint32_t get_w() { return _w; }
@@ -67,6 +67,7 @@ public:
 
     // provide to user
     Arc(const T& o, uint32_t w) : _o(o), _w(w) {}
+    Arc(uint32_t w) : _o(T()), _w(w) {}
     // only for value initialize
     Arc() {}
     ~Arc() {}
@@ -87,10 +88,12 @@ public:
     int locate_vertex(V v);
     int insert_vertex(V v);
     int upsert_vertex(V v);
-    int delete_vertex(V v);
+    void delete_vertex(V v);
     int insert_arc(V v, V w, A a);
     int upsert_arc(V v, V w, A a);
-    int delete_arc(V v, V w);
+    void delete_arc(V v, V w);
+    void bfs();
+    void dfs();
     void display();
 };
 
@@ -106,7 +109,7 @@ MGraph<V, A>::MGraph(GraphKind kind)
         iv = INFINITY_MAX;
     }
 
-    const size_t size = 256;
+    const size_t size = 4;
     _vex.reserve(size);
     _arc.resize(size);
     for (size_t i = 0; i < size; i++) {
@@ -117,6 +120,7 @@ MGraph<V, A>::MGraph(GraphKind kind)
     }
 
     _arcnum = 0;
+    _mask = 0;
     _mask |= kind;
 }
 
@@ -139,7 +143,7 @@ int
 MGraph<V, A>::locate_vertex(V v)
 {
     auto it = std::find_if(_vex.begin(), _vex.end(), [v](const V& ve) {
-        return _compare_equal(v, ve);
+        return _compare_equal(v._o, ve._o);
     });
     if (it != _vex.end()) {
         return std::distance(_vex.begin(), it);
@@ -157,7 +161,7 @@ MGraph<V, A>::insert_vertex(V v)
     }
 
     _vex.push_back(v);
-        if (_vex.size() > _arc.size()) {
+    if (_vex.size() > _arc.size()) {
         uint32_t iv = 0;
         if (_mask & DN || _mask & UN) {
             iv = INFINITY_MAX;
@@ -183,7 +187,7 @@ int
 MGraph<V, A>::upsert_vertex(V v)
 {
     if (locate_vertex(v) != -1) {
-        std::replace_if(_vex.begin(), _vex.end(), [&v](const V& ve) { return _compare_equal(v, ve); }, std::move(v));
+        std::replace_if(_vex.begin(), _vex.end(), [&v](const V& ve) { return _compare_equal(v._o, ve._o); }, std::move(v));
         return 0;
     }
 
@@ -191,10 +195,80 @@ MGraph<V, A>::upsert_vertex(V v)
 }
 
 template<typename V, typename A>
+void
+MGraph<V, A>::delete_vertex(V v)
+{
+    int index = locate_vertex(v);
+    if (index == -1) {
+        return ;
+    }
+
+    int size = (int)_vex.size();
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (_mask & DG) {
+                if (i == index || j == index) {
+                    if (_arc[i][j]._w == 1) {
+                        _arc[i][j].~A();
+                        _arc[i][j] = A(0);
+                        _arcnum--;
+                    }
+                }
+            } else if (_mask & DN) {
+                if (i == index || j == index) {
+                    if (_arc[i][j]._w != INFINITY_MAX) {
+                        _arc[i][j].~A();
+                        _arc[i][j] = A(INFINITY_MAX);
+                        _arcnum--;
+                    }
+                }
+            } else if (_mask & UG) {
+                if ((i == index || j == index) && i > j) {
+                    if (_arc[i][j]._w == 1) {
+                        _arc[i][j].~A();
+                        _arc[i][j] = A(0);
+                        _arc[j][i].~A();
+                        _arc[j][i] = A(0);
+                        _arcnum--;
+                    }
+                }
+            } else if (_mask & UN) {
+                if ((i == index || j == index) && i > j) {
+                    if (_arc[i][j]._w != INFINITY_MAX) {
+                        _arc[i][j].~A();
+                        _arc[i][j] = A(INFINITY_MAX);
+                        _arc[j][i].~A();
+                        _arc[j][i] = A(INFINITY_MAX);
+                        _arcnum--;
+                    }
+                }
+            }
+        }
+    }
+
+    auto it = std::find_if(_vex.begin(), _vex.end(), [v](const V& ve) {
+        return _compare_equal(v._o, ve._o);
+    });
+    _vex.erase(it);
+
+    return ;
+}
+
+template<typename V, typename A>
 int
 MGraph<V, A>::insert_arc(V v, V w, A a)
 {
-    return 0;
+    int vi = locate_vertex(v);
+    int wi = locate_vertex(w);
+    if (vi < 0 || wi < 0) {
+        return -1;
+    }
+
+    if (_arc[vi][wi]._w >= 1 && _arc[vi][wi]._w < INFINITY_MAX) {
+        return -1;
+    }
+
+    return upsert_arc(v, w, a);
 }
 
 template<typename V, typename A>
@@ -228,6 +302,13 @@ MGraph<V, A>::upsert_arc(V v, V w, A a)
 
 template<typename V, typename A>
 void
+MGraph<V, A>::delete_arc(V v, V w)
+{
+
+}
+
+template<typename V, typename A>
+void
 MGraph<V, A>::display()
 {
     std::string graph_type = (_mask & DG) ? "有向图" : (_mask & DN) ? "有向网" :
@@ -244,15 +325,15 @@ MGraph<V, A>::display()
     printf("%s具有 %lu 个顶点, %lu 条%s\n", graph_type.c_str(), _vex.size(), _arcnum, arc_type.c_str());
     printf("%16s", "");
     size_t i, j;
-    for (i = 0; i < _vex.size(); i++) {
-        printf("%16d", i);
+    for (i = 0; i < _arc.size(); i++) {
+        printf("%16lu", i);
     }
     printf("\n");
 
     for (i = 0; i < _arc.size(); i++) {
-        printf("%16d", i);
+        printf("%16lu", i);
         for (j = 0; j < _arc[i].size(); j++) {
-            printf("%16d", _arc[i][j]._w);
+            printf("%16u", _arc[i][j]._w);
         }
         printf("\n");
     }
