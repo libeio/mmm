@@ -7,6 +7,4 @@
 
 ### 小 TODO
 
-- delete_vertex 对四种图的测试
-- 编写 delete_arc 接口及对四种图的测试
-- DFS 和 BFS 接口编写与测试
+- dfs 和 bfs 接口编写与测试

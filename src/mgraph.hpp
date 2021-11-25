@@ -37,6 +37,7 @@ public:
 
     // provide to user
     Vertex(const T& o) : _o(o) {}
+    Vertex() {}
     ~Vertex() {}
 };
 
@@ -80,6 +81,7 @@ protected:
     std::vector<V> _vex;
     std::vector<std::vector<A>> _arc;
     size_t _arcnum;
+    size_t _vexnum;
     uint32_t _mask;
 public:
     MGraph(GraphKind kind);
@@ -89,6 +91,7 @@ public:
     int insert_vertex(V v);
     int upsert_vertex(V v);
     void delete_vertex(V v);
+    V get_vertex(int i);
     int insert_arc(V v, V w, A a);
     int upsert_arc(V v, V w, A a);
     void delete_arc(V v, V w);
@@ -120,6 +123,7 @@ MGraph<V, A>::MGraph(GraphKind kind)
     }
 
     _arcnum = 0;
+    _vexnum = 0;
     _mask = 0;
     _mask |= kind;
 }
@@ -135,6 +139,7 @@ MGraph<V, A>::~MGraph()
     _arc.clear();
 
     _arcnum = 0;
+    _vexnum = 0;
     _mask = NO;
 }
 
@@ -179,6 +184,8 @@ MGraph<V, A>::insert_vertex(V v)
         }
     }
 
+    _vexnum++;
+
     return 0;
 }
 
@@ -202,6 +209,9 @@ MGraph<V, A>::delete_vertex(V v)
     if (index == -1) {
         return ;
     }
+
+    _vex[index].~V();
+    _vex[index] = V();
 
     int size = (int)_vex.size();
     for (int i = 0; i < size; i++) {
@@ -246,12 +256,16 @@ MGraph<V, A>::delete_vertex(V v)
         }
     }
 
-    auto it = std::find_if(_vex.begin(), _vex.end(), [v](const V& ve) {
-        return _compare_equal(v._o, ve._o);
-    });
-    _vex.erase(it);
+    _vexnum--;
 
     return ;
+}
+
+template<typename V, typename A>
+V
+MGraph<V, A>::get_vertex(int i)
+{
+    return _vex.at(i);
 }
 
 template<typename V, typename A>
@@ -281,21 +295,34 @@ MGraph<V, A>::upsert_arc(V v, V w, A a)
         return -1;
     }
 
-    uint32_t weight = a._w;
-    // 图的权重为 1
-    if (_mask & DN || _mask & UN) {
-        weight = 1;
-    }
-    
-    _arc[vi][wi] = a;
-    _arc[vi][wi]._w = weight;
-    // 无向图或者无向网
-    if (_mask & UG || _mask & UN) {
-        _arc[wi][vi] = a;
-        _arc[wi][vi]._w = weight;
-    }
+    decltype(a._w) old_w = _arc[vi][wi]._w;
 
-    _arcnum++;
+    if (_mask & DG) {
+        _arc[vi][wi] = a;
+        _arc[vi][wi]._w = 1;
+        if (old_w == 0) {
+            _arcnum++;
+        }
+    } else if (_mask & DN) {
+        _arc[vi][wi] = a;
+        if (old_w == INFINITY_MAX) {
+            _arcnum++;
+        }
+    } else if (_mask & UG) {
+        _arc[vi][wi] = a;
+        _arc[vi][wi]._w = 1;
+        _arc[wi][vi] = a;
+        _arc[wi][vi]._w = 1;
+        if (old_w == 0) {
+            _arcnum++;
+        }
+    } else if (_mask & UN) {
+        _arc[vi][wi] = a;
+        _arc[wi][vi] = a;
+        if (old_w == INFINITY_MAX) {
+            _arcnum++;
+        }
+    }
     
     return 0;
 }
@@ -303,6 +330,48 @@ MGraph<V, A>::upsert_arc(V v, V w, A a)
 template<typename V, typename A>
 void
 MGraph<V, A>::delete_arc(V v, V w)
+{
+    int vi = locate_vertex(v);
+    int wi = locate_vertex(w);
+    if (vi < 0 || wi < 0) {
+        return ;
+    }
+
+    if (_mask & DG) {
+        _arc[vi][wi].~A();
+        _arc[vi][wi] = A(0);
+        _arcnum--;
+    } else if (_mask & DN) {
+        _arc[vi][wi].~A();
+        _arc[vi][wi] = A(INFINITY_MAX);
+        _arcnum--;
+    } else if (_mask & UG) {
+        _arc[vi][wi].~A();
+        _arc[vi][wi] = A(0);
+        _arc[wi][vi].~A();
+        _arc[wi][vi] = A(0);
+        _arcnum--;
+    } else if (_mask & UN) {
+        _arc[vi][wi].~A();
+        _arc[vi][wi] = A(INFINITY_MAX);
+        _arc[wi][vi].~A();
+        _arc[wi][vi] = A(INFINITY_MAX);
+        _arcnum--;
+    }
+
+    return ;
+}
+
+template<typename V, typename A>
+void
+MGraph<V, A>::bfs()
+{
+
+}
+
+template<typename V, typename A>
+void
+MGraph<V, A>::dfs()
 {
 
 }
@@ -322,17 +391,17 @@ MGraph<V, A>::display()
                            (_mask & UG || _mask & UN) ? "边" : "";
 
 
-    printf("%s具有 %lu 个顶点, %lu 条%s\n", graph_type.c_str(), _vex.size(), _arcnum, arc_type.c_str());
+    printf("%s具有 %lu 个顶点, %lu 条%s\n", graph_type.c_str(), _vexnum, _arcnum, arc_type.c_str());
     printf("%16s", "");
-    size_t i, j;
-    for (i = 0; i < _arc.size(); i++) {
+    size_t i, j, size = _vex.size();
+    for (i = 0; i < size; i++) {
         printf("%16lu", i);
     }
     printf("\n");
 
-    for (i = 0; i < _arc.size(); i++) {
+    for (i = 0; i < size; i++) {
         printf("%16lu", i);
-        for (j = 0; j < _arc[i].size(); j++) {
+        for (j = 0; j < size; j++) {
             printf("%16u", _arc[i][j]._w);
         }
         printf("\n");
