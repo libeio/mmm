@@ -3,6 +3,26 @@
 -- "告诉李天佑，不惜一切代价守住。"
 --
 
+DROP TABLE IF EXISTS metro_line_01;
+DROP TABLE IF EXISTS metro_line_02;
+DROP TABLE IF EXISTS metro_line_03;
+DROP TABLE IF EXISTS metro_line_04;
+DROP TABLE IF EXISTS metro_line_05;
+DROP TABLE IF EXISTS metro_line_06;
+DROP TABLE IF EXISTS metro_line_07;
+DROP TABLE IF EXISTS metro_line_08;
+DROP TABLE IF EXISTS metro_line_09;
+DROP TABLE IF EXISTS metro_line_10;
+DROP TABLE IF EXISTS metro_line_11;
+DROP TABLE IF EXISTS metro_line_12;
+DROP TABLE IF EXISTS metro_line_13;
+DROP TABLE IF EXISTS metro_line_15;
+DROP TABLE IF EXISTS metro_line_16;
+DROP TABLE IF EXISTS metro_line_17;
+DROP TABLE IF EXISTS metro_line_18;
+DROP TABLE IF EXISTS metro_line_pj;
+DROP TABLE IF EXISTS metro_line;
+
 --  1 号线
 
 CREATE TABLE IF NOT EXISTS metro_line_01(
@@ -702,5 +722,40 @@ INSERT INTO metro_line_pj(p1,p2,dut)
             VALUES ('沈杜公路',      '三鲁公路',     679),
                    ('三鲁公路',      '闵瑞路',       687),
                    ('闵瑞路',        '浦航路',       691),
-                   ('浦航路',       '东城一路',      637),
-                   ('东城一路',     '汇臻路',        655);
+                   ('浦航路',        '东城一路',     637),
+                   ('东城一路',      '汇臻路',       655);
+
+
+-- 总表
+
+CREATE TABLE IF NOT EXISTS metro_line(
+    id   SERIAL,
+    p1   VARCHAR(128) NOT NULL,      -- 端点 1
+    p2   VARCHAR(128) NOT NULL,      -- 端点 2
+    dut  INTEGER      NOT NULL,      -- 耗时(秒计)
+    dis  INTEGER,                    -- 距离(米计)
+    lnos VARCHAR(16)[],              -- 所在线路
+    PRIMARY KEY(id)
+);
+
+INSERT INTO metro_line(p1,p2,dut)
+    SELECT p1,p2,dut FROM metro_line_01 UNION
+    SELECT p1,p2,dut FROM metro_line_02 UNION
+    SELECT p1,p2,dut FROM metro_line_03 UNION
+    SELECT p1,p2,dut FROM metro_line_04 UNION
+    SELECT p1,p2,dut FROM metro_line_05 UNION
+    SELECT p1,p2,dut FROM metro_line_06 UNION
+    SELECT p1,p2,dut FROM metro_line_07 UNION
+    SELECT p1,p2,dut FROM metro_line_08 UNION
+    SELECT p1,p2,dut FROM metro_line_09 UNION
+    SELECT p1,p2,dut FROM metro_line_10 UNION
+    SELECT p1,p2,dut FROM metro_line_11 UNION
+    SELECT p1,p2,dut FROM metro_line_12 UNION
+    SELECT p1,p2,dut FROM metro_line_13 UNION
+    SELECT p1,p2,dut FROM metro_line_15 UNION
+    SELECT p1,p2,dut FROM metro_line_16 UNION
+    SELECT p1,p2,dut FROM metro_line_17 UNION
+    SELECT p1,p2,dut FROM metro_line_18 UNION
+    SELECT p1,p2,dut FROM metro_line_pj;
+
+\COPY (WITH t AS (SELECT * FROM metro_line) SELECT array_to_json(array_agg(row_to_json(t))) FROM t) TO '/tmp/metro.json';
