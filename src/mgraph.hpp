@@ -186,16 +186,17 @@ MGraph<V, A>::insert_vertex(V v)
 
     _vexnum++;
 
-    return 0;
+    return (int)_vex.size() - 1;
 }
 
 template<typename V, typename A>
 int
 MGraph<V, A>::upsert_vertex(V v)
 {
-    if (locate_vertex(v) != -1) {
+    int i = locate_vertex(v);
+    if (i != -1) {
         std::replace_if(_vex.begin(), _vex.end(), [&v](const V& ve) { return _compare_equal(v._o, ve._o); }, std::move(v));
-        return 0;
+        return i;
     }
 
     return insert_vertex(v);
@@ -310,8 +311,8 @@ template<typename V, typename A>
 int
 MGraph<V, A>::upsert_arc(V v, V w, A a)
 {
-    int vi = locate_vertex(v);
-    int wi = locate_vertex(w);
+    int vi = upsert_vertex(v);
+    int wi = upsert_vertex(w);
     if (vi < 0 || wi < 0) {
         return -1;
     }

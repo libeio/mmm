@@ -50,6 +50,10 @@ int main()
     mg.insert_arc(Vertex<VNode>(VNode("A")), Vertex<VNode>(VNode("F")), Arc<ANode>(20));
     mg.display();
 
+    // 增加新边
+    mg.upsert_arc(Vertex<VNode>(VNode("G")), Vertex<VNode>(VNode("H")), Arc<ANode>(55));
+    mg.display();
+
     Vertex<VNode> x = mg.get_vertex(2);
     std::cout << x.get()._name << std::endl;
     
