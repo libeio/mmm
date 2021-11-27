@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.0)
 #
 # Options
 #
-option(BUILD_XPACK   "build xpack test"     OFF)
+option(BUILD_XPACK   "build xpack test"     ON)
 option(BUILD_TEMPL   "build template test"  ON)
 option(BUILD_MYLOG   "build mylog test"     OFF)
 option(BUILD_MGRAPH  "build mgraph test"    ON)
