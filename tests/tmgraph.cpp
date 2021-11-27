@@ -22,19 +22,32 @@ int main()
     }
     mg.display();
     
+    // 增加顶点(如果存在则更新)
     mg.upsert_vertex(Vertex<VNode>(VNode("E")));
     mg.display();
-
-    mg.insert_arc(Vertex<VNode>(VNode("C")), Vertex<VNode>(VNode("E")), Arc<ANode>(10));
+    
+    // 增加边(如果存在则返回)
+    mg.insert_arc(Vertex<VNode>(VNode("B")), Vertex<VNode>(VNode("E")), Arc<ANode>(10));
+    mg.insert_arc(Vertex<VNode>(VNode("E")), Vertex<VNode>(VNode("D")), Arc<ANode>(15));
     mg.display();
 
+    // 增加顶点(如果存在则返回)
     mg.insert_vertex(Vertex<VNode>(VNode("C")));
     mg.display();
 
+    // 删除顶点
     mg.delete_vertex(Vertex<VNode>(VNode("C")));
     mg.display();
 
     mg.delete_arc(Vertex<VNode>(VNode("A")), Vertex<VNode>(VNode("B")));
+    mg.display();
+
+    // 增加新顶点
+    mg.insert_vertex(Vertex<VNode>(VNode("F")));
+    mg.display();
+
+    // 增加新边
+    mg.insert_arc(Vertex<VNode>(VNode("A")), Vertex<VNode>(VNode("F")), Arc<ANode>(20));
     mg.display();
 
     Vertex<VNode> x = mg.get_vertex(2);
