@@ -107,11 +107,15 @@ public:
     size_t arc_size() { return _arcnum; }
     std::vector<std::tuple<V, V, uint32_t>> prim();
     std::vector<std::tuple<V, V, uint32_t>> kruskal();
+    std::vector<std::tuple<V, V, uint32_t>> shortest_path(V v, V w);
 private:
     void _dfs_internal(V v);
     bool _min_tree_internal();
+    void _dijkstra_internal(V v, std::vector<std::vector<int>>& path, std::vector<uint32_t>& dist);
 private:
     std::vector<int> _visited;
+    std::vector<std::vector<int>> _path;
+    std::vector<uint32_t> _dist;
 };
 
 template<typename V, typename A>
@@ -626,6 +630,106 @@ MGraph<V, A>::kruskal()
         }
         edges.erase(iter);  
     }
+
+    return vpp;
+}
+
+template<typename V, typename A>
+void
+MGraph<V, A>::_dijkstra_internal(V v, std::vector<std::vector<int>>& path, std::vector<uint32_t>& dist)
+{
+    size_t vi, wi, i;
+    uint32_t min;
+    std::vector<int> S; // 集合 S 。用于记录 v0 到索引对应顶点的最短路径是否求出
+
+    int v0 = locate_vertex(v);
+
+    path.resize(_vexnum);
+    for (i = 0; i < path.size(); i++) {
+        path[i].resize(_vexnum);
+    }
+
+    dist.resize(_vexnum);
+    S.resize(_vexnum);
+
+    // 初始化
+    for (vi = 0; vi < _vexnum; vi++) {
+        S[vi] = 0;
+        dist[vi] = _arc[v0][vi]._w;
+        for (wi = 0; wi < _vexnum; wi++) {
+            path[vi][wi] = 0;
+        }
+        if (dist[vi] < INFINITY_MAX) {  // 如果从 v0 到 vi 存在直接路径，则利用此路径初始化数组
+            path[vi][v0] = 1;
+            path[vi][vi] = 1;
+        }
+    }
+
+    dist[v0] = 0;   // v0 到 v0 的路径为 0
+    S[v0] = 1;      // v0 顶点并入集合 S
+
+    // 计算从 v0 到其余各顶点的最短路径，并将计算后的顶点并入集合 S
+    for (i = 1; i < _vexnum; i++) {    // 只需要执行 _vexnum - 1 次
+        min = INFINITY_MAX;
+        for (wi = 0; wi < _vexnum; wi++) {
+            if (! S[wi] && dist[wi] < min) {   // 在不属于 S 的顶点中，找到离 v0 最近的顶点
+                vi = wi;
+                min = dist[wi];
+            }
+        }
+        
+        S[vi] = 1;     // 将顶点 vi 并入到集合 S
+        for (wi = 0; wi < _vexnum; wi++) {
+            /**
+             * 一共有四个判断条件，缺一不可。按这样的顺序进行判断的意义是:
+             *  ! S[wi]: 要更新的顶点 wi 应不属于集合 S
+             *  min < INFINITY_MAX && _arc[vi][wi]._w < INFINITY_MAX: 且 v0 到 wi 确实存在一条路径，
+             *    其中 min=Min{v0到vi的最短路径}。 min < INFINITY_MAX 说明 v0 到 vi 是存在路径的，
+             *    _arc[vi][wi]._w < INFINITY_MAX 说明 vi 到 wi 也是存在路径的。两者结合说明 v0 到 wi
+             *    是存在一条路径的。
+             *  min + _arc[vi][wi]._w < dist[wi]: 这个比较容易理解，就是 v0 通过 vi 点到 wi 的路径长度
+             *    如果比原来记录的要小，则替换之。
+             */
+            if (! S[wi] && 
+                min < INFINITY_MAX && _arc[vi][wi]._w < INFINITY_MAX &&
+                (min + _arc[vi][wi]._w < dist[wi]))
+            {
+                dist[wi] = min + _arc[vi][wi]._w;
+                // 更新路径映射，意会...
+                for (size_t k = 0; k < _vexnum; k++) {
+                    path[wi][k] = path[vi][k];
+                }
+                path[wi][wi] = 1;
+            }
+        }
+    }
+}
+
+template<typename V, typename A>
+std::vector<std::tuple<V, V, uint32_t>>
+MGraph<V, A>::shortest_path(V v, V w)
+{
+    using RT = std::vector<std::tuple<V, V, uint32_t>>;
+
+    for (size_t i = 0; i < _path.size(); i++) {
+        _path[i].clear();
+    }
+    _path.clear();
+    _dist.clear();
+    
+    _dijkstra_internal(v, _path, _dist);
+
+    RT vpp;
+
+    int vi = locate_vertex(v);
+    for (int i = 0; i < (int)_vexnum; i++) {
+        if (i != vi) {
+            vpp.emplace_back(_vex[vi], _vex[i], _dist[i]);
+        }
+    }
+
+    int wi = locate_vertex(w);
+    
 
     return vpp;
 }
