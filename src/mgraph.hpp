@@ -98,6 +98,8 @@ public:
     void bfs();
     void dfs();
     void display();
+    size_t vertex_size() { return _vexnum; }
+    size_t arc_size() { return _arcnum; }
 };
 
 template<typename V, typename A>
@@ -388,7 +390,7 @@ template<typename V, typename A>
 void
 MGraph<V, A>::bfs()
 {
-
+    
 }
 
 template<typename V, typename A>
@@ -414,17 +416,17 @@ MGraph<V, A>::display()
 
 
     printf("%s具有 %lu 个顶点, %lu 条%s\n", graph_type.c_str(), _vexnum, _arcnum, arc_type.c_str());
-    printf("%16s", "");
+    printf("%10s", "");
     size_t i, j, size = _vex.size();
     for (i = 0; i < size; i++) {
-        printf("%16lu", i);
+        printf("%10lu", i);
     }
     printf("\n");
 
     for (i = 0; i < size; i++) {
-        printf("%16lu", i);
+        printf("%10lu", i);
         for (j = 0; j < size; j++) {
-            printf("%16u", _arc[i][j]._w);
+            printf("%10u", _arc[i][j]._w);
         }
         printf("\n");
     }

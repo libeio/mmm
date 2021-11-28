@@ -759,3 +759,42 @@ INSERT INTO metro_line(p1,p2,dut)
     SELECT p1,p2,dut FROM metro_line_pj;
 
 \COPY (WITH t AS (SELECT * FROM metro_line) SELECT array_to_json(array_agg(row_to_json(t))) FROM t) TO '/tmp/metro.json';
+
+-- 测试
+
+DROP TABLE IF EXISTS metro_line_tt;
+
+CREATE TABLE IF NOT EXISTS metro_line_tt(
+    id   SERIAL,
+    p1   VARCHAR(128) NOT NULL,      -- 端点 1
+    p2   VARCHAR(128) NOT NULL,      -- 端点 2
+    dut  INTEGER      NOT NULL,      -- 耗时(秒计)
+    dis  INTEGER,                    -- 距离(米计)
+    lnos VARCHAR(16)[],              -- 所在线路
+    PRIMARY KEY(id)
+);
+
+INSERT INTO metro_line_tt(p1,p2,dut)
+            VALUES ('长寿路',      '江宁路',     10),
+                   ('江宁路',      '汉中路',     20),
+                   ('汉中路',      '新闸路',     30),
+                   ('新闸路',      '人民广场',   40),
+                   ('人民广场',    '南京西路',   50),
+                   ('南京西路',     '静安寺',    60),
+                   ('静安寺',       '昌平路',    70),
+                   ('昌平路',       '长寿路',    80),
+                   ('南京西路',     '陕西南路',  90),
+                   ('陕西南路',     '黄陂南路',  100),
+                   ('黄陂南路',     '人民广场',  110),
+                   ('汉中路',       '南京西路',  120),
+                   ('南京西路',     '淮海中路',   130),
+                   ('淮海中路',     '新天地',     140),
+                   ('新天地',       '陕西南路',   150),
+                   ('陕西南路',     '常熟路',     160),
+                   ('汉中路',       '曲阜路',     170),
+                   ('曲阜路',       '人民广场',   180),
+                   ('汉中路',       '自然博物馆', 190),
+                   ('自然博物馆',    '南京西路',  200),
+                   ('常熟路',        '静安寺',    210);
+
+\COPY (WITH t AS (SELECT * FROM metro_line_tt) SELECT array_to_json(array_agg(row_to_json(t))) FROM t) TO '/tmp/metro_tt.json';
