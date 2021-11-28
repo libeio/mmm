@@ -2,12 +2,14 @@
 
 #include "primitive.hpp"
 #include "compare.hpp"
+#include "show.hpp"
 
 #include <vector>
 #include <type_traits>
 #include <algorithm>
 #include <iterator>
 #include <string>
+#include <queue>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -100,6 +102,10 @@ public:
     void display();
     size_t vertex_size() { return _vexnum; }
     size_t arc_size() { return _arcnum; }
+private:
+    void _dfs_internal(V v);
+private:
+    std::vector<int> _visited;
 };
 
 template<typename V, typename A>
@@ -302,7 +308,7 @@ MGraph<V, A>::insert_arc(V v, V w, A a)
         return -1;
     }
 
-    if (_arc[vi][wi]._w >= 1 && _arc[vi][wi]._w < INFINITY_MAX) {
+    if (((_mask & DG || _mask & UG) && (_arc[vi][wi]._w == 1)) || ((_mask & DN || _mask & UN) && (_arc[vi][wi]._w != INFINITY_MAX))) {
         return -1;
     }
 
@@ -386,18 +392,69 @@ MGraph<V, A>::delete_arc(V v, V w)
     return ;
 }
 
+#include "common.hpp"
+
 template<typename V, typename A>
 void
 MGraph<V, A>::bfs()
 {
-    
+    std::vector<int> vt;
+    _visited.swap(vt);
+    _visited.resize(_vexnum, 0);
+
+    std::queue<int> q;
+    for (size_t i = 0; i < _vexnum; i++) {
+        if (! _visited[i]) {
+            _visited[i] = 1;
+            _show_vertex(_vex[i]._o);
+            q.push(i);
+
+            while (! q.empty()) {
+                size_t i = q.front();
+                for (size_t j = 0; j < _vexnum; j++) {
+                    if (((_mask & DG || _mask & UG) && (_arc[i][j]._w == 1)) || ((_mask & DN || _mask & UN) && (_arc[i][j]._w != INFINITY_MAX))) {
+                        if (! _visited[j]) {
+                            _visited[j] = 1;
+                            _show_vertex(_vex[j]._o);
+                            q.push(j);
+                        }
+                    }
+                }
+                q.pop();
+            }
+        }
+    }
 }
 
 template<typename V, typename A>
 void
 MGraph<V, A>::dfs()
 {
+    std::vector<int> vt;
+    _visited.swap(vt);
+    _visited.resize(_vexnum, 0);
 
+    for (size_t i = 0; i < _vexnum; i++) {
+        if (! _visited[i]) {
+            _dfs_internal(_vex[i]);
+        }
+    }
+}
+
+template<typename V, typename A>
+void
+MGraph<V, A>::_dfs_internal(V v)
+{
+    int i = locate_vertex(v);
+    _visited[i] = 1;
+    _show_vertex(v._o);
+    for (int j = 0; j < (int)_vexnum; j++) {
+        if (((_mask & DG || _mask & UG) && (_arc[i][j]._w == 1)) || ((_mask & DN || _mask & UN) && (_arc[i][j]._w != INFINITY_MAX))) {
+            if (! _visited[j]) {
+                _dfs_internal(_vex[j]);
+            }
+        }
+    }
 }
 
 template<typename V, typename A>
