@@ -2,7 +2,7 @@
 ### TODO
 
 - 最小生成树
-  - prim
+  - prim(ok)
   - kruskal
 
 - 最短路径

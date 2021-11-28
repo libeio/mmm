@@ -10,6 +10,9 @@
 #include <iterator>
 #include <string>
 #include <queue>
+#include <set>
+#include <tuple>
+#include <map>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -102,8 +105,11 @@ public:
     void display();
     size_t vertex_size() { return _vexnum; }
     size_t arc_size() { return _arcnum; }
+    std::vector<std::tuple<V, V, uint32_t>> prim();
+    std::vector<std::tuple<V, V, uint32_t>> kruskal();
 private:
     void _dfs_internal(V v);
+    bool _min_tree_internal();
 private:
     std::vector<int> _visited;
 };
@@ -455,6 +461,174 @@ MGraph<V, A>::_dfs_internal(V v)
             }
         }
     }
+}
+
+template<typename V, typename A>
+bool
+MGraph<V, A>::_min_tree_internal()
+{
+    if (_mask & DG || _mask & UG) {
+        printf("图没有最小生成树\n");
+        return false;
+    }
+
+    if (_mask & DN) {
+        printf("暂不支持有向网构造最小生成树\n");
+        return false;
+    }
+    
+    if (_vexnum == 0) {
+        printf("网中没有顶点\n");
+        return false;
+    }
+
+    std::vector<int> vt;
+    _visited.swap(vt);
+    _visited.resize(_vexnum, 0);
+
+    size_t counter = 0;
+    std::queue<int> q;
+    
+    _visited[0] = 1;
+    counter++;
+    q.push(0);
+    while (! q.empty()) {
+        size_t i = q.front();
+        for (size_t j = 0; j < _vexnum; j++) {
+            if (((_mask & DG || _mask & UG) && (_arc[i][j]._w == 1)) || ((_mask & DN || _mask & UN) && (_arc[i][j]._w != INFINITY_MAX))) {
+                if (! _visited[j]) {
+                    _visited[j] = 1;
+                    counter++;
+                    q.push(j);
+                }
+            }
+        }
+        q.pop();
+    }
+    if (counter < _vexnum) {
+        printf("网是非连通的，无法产生最小生成树\n");
+        return false;
+    }
+
+    return true;
+}
+
+
+template<typename V, typename A>
+std::vector<std::tuple<V, V, uint32_t>>
+MGraph<V, A>::prim()
+{
+    using RT = std::vector<std::tuple<V, V, uint32_t>>;
+
+    if (! _min_tree_internal()) {
+        return RT();
+    }
+
+    typedef struct {
+        V adjv;
+        uint32_t lowcost;
+    } CloserEdge;
+
+    std::vector<CloserEdge> ce;
+    std::set<int> Ui, Vi;
+    ce.resize(_vexnum);
+    for (int i = 0; i < (int)_vexnum; i++) {
+        Vi.insert(i);
+    }
+
+    int k = 0;
+    Ui.insert(k);
+    Vi.erase(k);
+    // 初始时，在数组中记录 V-U 中各顶点与 k 顶点的边权
+    for (int j = 0; j < (int)_vexnum; j++) {
+        ce[j].adjv = _vex[k];
+        ce[j].lowcost = _arc[k][j]._w;
+    }
+
+    RT vpp;
+    // 与剩下的 _vexnum - 1 个顶点比较
+    for (int i = 1; i < (int)_vexnum; i++) {
+        uint32_t min_cost = INFINITY_MAX;
+        int k = -1;
+        for (auto it = Vi.begin(); it != Vi.end(); it++) {
+            if (ce[*it].lowcost < min_cost) {
+                min_cost = ce[*it].lowcost;
+                k = *it;
+            }
+        }
+        if (k < 0) {
+            printf("非法边导致的异常\n");
+            return RT();
+        }
+
+        vpp.emplace_back(ce[k].adjv, _vex[k], ce[k].lowcost);  // first -> second
+        
+        Ui.insert(k);
+        Vi.erase(k);
+
+        // 已经从 V - U 中选择了一个顶点，使得该顶点到 k 顶点权重最小。
+        // 那么就将 V - U 中其他顶点到 k 顶点的权重置为无限，方便后续重新赋值
+        for (auto it = Vi.begin(); it != Vi.end(); it++) {
+            ce[*it].lowcost = INFINITY_MAX;
+        }
+        // 新顶点加入 U 集后，重新将最小边存入数组
+        for (auto x = Vi.begin(); x != Vi.end(); x++) {
+            for (auto y = Ui.begin(); y != Ui.end(); y++) {
+                if (_arc[*x][*y]._w < ce[*x].lowcost) {
+                    ce[*x].adjv = _vex[*y];
+                    ce[*x].lowcost = _arc[*x][*y]._w;
+                }
+            }
+        }
+    }
+
+    return vpp;
+}
+
+template<typename V, typename A>
+std::vector<std::tuple<V, V, uint32_t>> 
+MGraph<V, A>::kruskal()
+{
+    using RT = std::vector<std::tuple<V, V, uint32_t>>;
+
+    if (! _min_tree_internal()) {
+        return RT();
+    }
+
+    std::vector<int> sets;      // 顶点到集合的映射，下标为顶点，值为映射集合编号(实际并不存在)
+    std::multimap<uint32_t, std::pair<int, int>> edges;
+
+    int i, j, k;
+    
+    for (i = 0; i < (int)_vexnum; i++) {
+        sets.push_back(i);
+    }
+
+    for (i = 0; i < (int)_vexnum; i++) {    /** 矩阵上三角获得所有边及对应权值 */
+        for (j = i + 1; j < (int)_vexnum; j++) {
+            edges.emplace(_arc[i][j]._w, std::pair<int, int>(i, j));  /** 缺省排序 */
+        }
+    }
+
+    RT vpp;
+
+    while (! edges.empty()) {
+        auto iter = edges.begin();
+        if (sets[iter->second.first] != sets[iter->second.second]) {
+            // printf("(%s-%s)=%lu\n", _vex[iter->second.first].name.c_str(), _vex[iter->second.second].name.c_str(), iter->first);
+            vpp.emplace_back(_vex[iter->second.first], _vex[iter->second.second], iter->first);
+
+            int ou = sets[iter->second.second];          // 记下旧的集合
+            for (i = 0; i < (int)sets.size(); i++) {     // 合并集合
+                if (sets[i] == ou) {
+                    sets[i] = sets[iter->second.first];
+                }
+            }
+        }
+        edges.erase(iter);  
+    }
+
+    return vpp;
 }
 
 template<typename V, typename A>

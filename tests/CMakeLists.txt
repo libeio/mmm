@@ -3,11 +3,13 @@ cmake_minimum_required(VERSION 2.8.0)
 #
 # Options
 #
-option(BUILD_XPACK          "build xpack test"              ON)
-option(BUILD_TEMPL          "build template test"           ON)
+option(BUILD_XPACK          "build xpack test"              OFF)
+option(BUILD_TEMPL          "build template test"           OFF)
 option(BUILD_MYLOG          "build mylog test"              OFF)
-option(BUILD_MG_BASE        "build mgraph base test"        ON)
-option(BUILD_MG_TRAVERSE    "build mgraph bfs and dfs test" ON)
+option(BUILD_MG_BASE        "build mgraph base test"        OFF)
+option(BUILD_MG_TRAVERSE    "build mgraph bfs and dfs test" OFF)
+option(BUILD_MG_PRIM        "build mgraph prim test"        ON)
+option(BUILD_MG_KRUSKAL     "build mgraph kruskal test"     ON)
 
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -35,4 +37,12 @@ endif()
 
 if (BUILD_MG_TRAVERSE)
     add_executable(mg_traverse mg_traverse.cpp)
+endif()
+
+if (BUILD_MG_PRIM)
+    add_executable(mg_prim mg_prim.cpp)
+endif()
+
+if (BUILD_MG_KRUSKAL)
+    add_executable(mg_kruskal mg_kruskal.cpp)
 endif()
