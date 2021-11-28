@@ -615,7 +615,6 @@ MGraph<V, A>::kruskal()
     while (! edges.empty()) {
         auto iter = edges.begin();
         if (sets[iter->second.first] != sets[iter->second.second]) {
-            // printf("(%s-%s)=%lu\n", _vex[iter->second.first].name.c_str(), _vex[iter->second.second].name.c_str(), iter->first);
             vpp.emplace_back(_vex[iter->second.first], _vex[iter->second.second], iter->first);
 
             int ou = sets[iter->second.second];          // 记下旧的集合
